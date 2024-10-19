@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/api"
-	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/hashicorp/vault/sdk/plugin"
 	"github.com/robwittman/vault-plugin-secrets-confluent/backend"
 	"os"
@@ -28,8 +26,4 @@ func main() {
 		logger.Error("plugin shutting down", "error", err)
 		os.Exit(1)
 	}
-}
-
-func Factory(context.Context, *logical.BackendConfig) (logical.Backend, error) {
-
 }
