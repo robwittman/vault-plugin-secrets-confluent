@@ -14,10 +14,8 @@ const (
 )
 
 type confluentApiKey struct {
-	ApiKey    string `json:"api_key,omitempty"`
-	ApiKeyId  string `json:"api_key_id"`
+	ApiKey    string `json:"api_key"`
 	ApiSecret string `json:"api_secret"`
-	Url       string `json:"url"`
 }
 
 func (b *Backend) confluentApiKey() *framework.Secret {
@@ -45,39 +43,32 @@ func (b *Backend) apiKeyRevoke(ctx context.Context, req *logical.Request, d *fra
 	}
 
 	apiKeyId := ""
-	apiKeyIdValue, ok := req.Secret.InternalData["api_key_id"]
+	apiKeyIdValue, ok := req.Secret.InternalData["api_key"]
 	if ok {
 		apiKeyId, ok = apiKeyIdValue.(string)
 		if !ok {
-			return nil, fmt.Errorf("invalid value for api_key_id in secret internal data")
+			return nil, fmt.Errorf("invalid value for api_key in secret internal data")
 		}
 	}
 
-	_, err = c.apikeys.APIKeysIamV2Api.DeleteIamV2ApiKey(ctx, apiKeyId).Execute()
+	auth := c.authContext()
+
+	_, err = c.apikeys.APIKeysIamV2Api.DeleteIamV2ApiKey(auth, apiKeyId).Execute()
 	return nil, err
 }
 
 func createToken(ctx context.Context, c *client, roleName string) (*confluentApiKey, error) {
-	sa, _, err := c.iam.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(ctx, roleName).Execute()
-	if err != nil {
-		return nil, fmt.Errorf("error reading Confluent service account : %w", err)
-	}
+	ownerKind := "service-account"
+	spec := v2.NewIamV2ApiKeySpec()
+	spec.SetDisplayName("Vault generated token")
+	spec.SetDescription("Vault generated token")
+	spec.SetOwner(v2.ObjectReference{Id: roleName, Kind: &ownerKind})
+	createApiKeyRequest := v2.IamV2ApiKey{Spec: spec}
+	auth := c.authContext()
 
-	// "spec": {
-	//"display_name": "CI kafka access key",
-	//"description": "This API key provides kafka access to cluster x",
-	//"owner": {},
-	//"resource": {}
-	//}
 	apiKey, _, err := c.apikeys.APIKeysIamV2Api.
-		CreateIamV2ApiKey(ctx).
-		IamV2ApiKey(v2.IamV2ApiKey{
-			Spec: &v2.IamV2ApiKeySpec{
-				Owner: &v2.ObjectReference{
-					Id: *sa.Id,
-				},
-			},
-		}).
+		CreateIamV2ApiKey(auth).
+		IamV2ApiKey(createApiKeyRequest).
 		Execute()
 
 	if err != nil {
@@ -85,9 +76,8 @@ func createToken(ctx context.Context, c *client, roleName string) (*confluentApi
 	}
 
 	return &confluentApiKey{
-		ApiKeyId:  *apiKey.Id,
+		ApiKey:    *apiKey.Id,
 		ApiSecret: *apiKey.Spec.Secret,
-		Url:       c.iam.GetConfig().Host,
 	}, nil
 }
 

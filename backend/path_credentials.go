@@ -67,7 +67,6 @@ func (b *Backend) createRoleCreds(ctx context.Context, req *logical.Request, rol
 	}
 
 	resp := b.Secret(ConfluentApiKeyType).Response(map[string]interface{}{
-		"api_key_id": apiKey.ApiKeyId,
 		"api_key":    apiKey.ApiKey,
 		"api_secret": apiKey.ApiSecret,
 	}, map[string]interface{}{

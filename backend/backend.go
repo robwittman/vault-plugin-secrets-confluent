@@ -2,8 +2,6 @@ package backend
 
 import (
 	"context"
-	"fmt"
-	log "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 	"strings"
@@ -58,48 +56,6 @@ func Factory(ctx context.Context, config *logical.BackendConfig) (logical.Backen
 	return b, nil
 }
 
-var _ logical.Backend = (*Backend)(nil)
-
-func (b *Backend) Initialize(ctx context.Context, req *logical.InitializationRequest) error {
-	return nil
-}
-
-func (b *Backend) HandleRequest(context.Context, *logical.Request) (*logical.Response, error) {
-	return nil, nil
-}
-
-func (b *Backend) SpecialPaths() *logical.Paths {
-	return &logical.Paths{}
-}
-
-func (b *Backend) System() logical.SystemView {
-	return logical.TestSystemView()
-}
-
-func (b *Backend) Logger() log.Logger {
-	return log.New(nil)
-}
-
-func (b *Backend) HandleExistenceCheck(context.Context, *logical.Request) (bool, bool, error) {
-	return false, false, nil
-}
-
-func (b *Backend) Cleanup(context.Context) {
-	return
-}
-
-func (b *Backend) InvalidateKey(context.Context, string) {
-	return
-}
-
-func (b *Backend) Setup(context.Context, *logical.BackendConfig) error {
-	return nil
-}
-
-func (b *Backend) Type() logical.BackendType {
-	return logical.TypeCredential
-}
-
 func (b *Backend) invalidate(ctx context.Context, key string) {
 	if key == "config" {
 		b.reset()
@@ -139,5 +95,5 @@ func (b *Backend) getClient(ctx context.Context, s logical.Storage) (*client, er
 		return nil, err
 	}
 
-	return nil, fmt.Errorf("need to return client")
+	return b.client, nil
 }

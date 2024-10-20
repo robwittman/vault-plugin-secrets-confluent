@@ -63,6 +63,7 @@ func pathRole(b *Backend) []*framework.Path {
 					Callback: b.pathRolesDelete,
 				},
 			},
+			ExistenceCheck:  b.pathRolesExistenceCheck,
 			HelpSynopsis:    pathRoleHelpSynopsis,
 			HelpDescription: pathRoleHelpDescription,
 		},
@@ -77,6 +78,15 @@ func pathRole(b *Backend) []*framework.Path {
 			HelpDescription: pathRoleListHelpDescription,
 		},
 	}
+}
+
+func (b *Backend) pathRolesExistenceCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
+	out, err := req.Storage.Get(ctx, req.Path)
+	if err != nil {
+		return false, fmt.Errorf("existence check failed: %w", err)
+	}
+
+	return out != nil, nil
 }
 
 const (

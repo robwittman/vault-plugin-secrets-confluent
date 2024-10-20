@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	url         = "https://api.confluent.io"
-	accessToken = "my-access-token"
+	url      = "https://api.confluent.io"
+	username = "vault-confluent"
+	password = "secret"
 )
 
 func TestConfig(t *testing.T) {
@@ -18,14 +19,16 @@ func TestConfig(t *testing.T) {
 
 	t.Run("Test Configuration", func(t *testing.T) {
 		err := testConfigCreate(t, b, reqStorage, map[string]interface{}{
-			"access_token": accessToken,
-			"url":          url,
+			"username": username,
+			"password": password,
+			"url":      url,
 		})
 
 		assert.NoError(t, err)
 
 		err = testConfigRead(t, b, reqStorage, map[string]interface{}{
-			"url": url,
+			"url":      url,
+			"username": username,
 		})
 
 		assert.NoError(t, err)
@@ -37,7 +40,8 @@ func TestConfig(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = testConfigRead(t, b, reqStorage, map[string]interface{}{
-			"url": "https://test.confluent.io",
+			"username": username,
+			"url":      "https://test.confluent.io",
 		})
 
 		assert.NoError(t, err)
